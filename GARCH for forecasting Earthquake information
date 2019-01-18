@@ -1,0 +1,58 @@
+%GARCH for forecasting Earthquake information
+A = xlsread('data.xlsx', 'sheet1');
+y = A(:,2);
+t = A(:,1);
+% y=observation values
+% t= time of events
+%Starat GARCH method GARCH (1,1) offset =1
+title('Data points')
+Md2 = garch('GARCHLags',3,'ARCHLags',1,'Offset',1);
+EstMdl = estimate(Md2,y); 
+numPeriods = 9016;
+vF = forecast(EstMdl,numPeriods,'Y0',y);
+v = infer(EstMdl,y);
+% vv= predicted values from GARCH method
+vv= v(1:9016,:);
+%Starat MLR section (Combinition GARCH and MLR)
+%outputs of GARCH imported as input in MLR method
+F=@(x,t)x(1)*vv(t)+x(2)
+x0 = ones(2,1);
+[x,resnorm,~,exitflag,output] = lsqcurvefit(F,x0,t,y)
+F3=x(1)*vv(t)+x(2);
+%F3= predicted method from MLR
+%F3= final predicted values in Model combination GARCH and MLR
+% output from GARCH method is imported as input data in MLR
+hold on
+plot(y,F3,'ro')
+hold off
+F3=x(1)*vv(t)+x(2);
+F12 = F3(1:6188,:);
+y12 = y(1:6188,:);
+r12=corr2(F12,y12)
+R12=r12^2
+m12=sqrt(sum((y12(:)-F12(:)).^2)/numel(F12))
+b12=max(F12);
+a12=min(F12);
+n12=m12/(b12-a12)
+fb12=(sum(F12(:)-y12(:)))/(2*numel(F12)*(sum(F12(:)+y12(:))))
+F16 = F3(6188:9016,:);
+y16 = y(6188:9016,:);
+r16=corr2(F16,y16)
+R16=r16^2
+m16=sqrt(sum((y16(:)-F16(:)).^2)/numel(F16))
+b16=max(F16);
+a16=min(F16);
+n16=m16/(b16-a16)
+fb16=(sum(F16(:)-y16(:)))/(2*numel(F16)*(sum(F16(:)+y16(:))))
+% table1= Correlation Coefficient, RMSE, NMSE and Fractional bias
+%R12= correlation coefficient in traning section
+%R16= correlation coefficient in forecasting section
+%m12= RMSE in training section
+%m16= RMSE in forecasting section
+%n12= NMSE in training section
+%n16= NMSE in forecasting section
+%fb12= fractional bias in training section
+%fb16= fractional bias in forecasting section
+table1=[R12,m12,n12,fb12,R16,m16,n16,fb16]
+%table2= time, observation values, predicted values
+table2=[[t],[y],[F3]];
