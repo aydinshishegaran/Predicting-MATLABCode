@@ -1,4 +1,4 @@
-%ARIMA for Forecasting earhquake
+%ARIMA for Forecasting earhquake information
 A = xlsread('data.xlsx', 'sheet1');
 y = A(:,2);
 t = A(:,1);
