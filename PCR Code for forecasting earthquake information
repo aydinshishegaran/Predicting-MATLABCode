@@ -1,0 +1,53 @@
+% Principle component regression (PCR) Code for forecasting earthquake information
+A = xlsread('MLR.xlsx', 'sheet1');
+y = A(:,2);
+t = A(:,1);
+X = A(:,3:6);
+% y=observation values
+% t= time of events
+% X= independ variables
+% X includes previous, 2nd previous, 3rd previous and 4th previous event values
+[n,p] = size(X);
+[PCALoadings,PCAScores,PCAVar] = pca(X,'Economy',false);
+betaPCR = regress(y-mean(y), PCAScores(:,1:4));
+betaPCR = (PCALoadings(:,1:4)*(betaPCR));
+betaPCR = [mean(y) - mean(X)*betaPCR; betaPCR];
+yfitPCR = [ones(n,1) X]*betaPCR;
+[W, EvalueMatrix] = eig(cov(X));
+Evalues = diag(EvalueMatrix);
+vx = var(X);
+hold on
+plot(y,yfitPCR,'ro');
+hold off
+F2 = yfitPCR
+F2 = yfitPCR
+F12 = F2(1:6188,:);
+y12 = y(1:6188,:);
+r12=corr2(F12,y12)
+R12=r12^2
+m12=sqrt(sum((y12(:)-F12(:)).^2)/numel(F12))
+b12=max(F12);
+a12=min(F12);
+n12=m12/(b12-a12)
+fb12=(sum(F12(:)-y12(:)))/(2*numel(F12)*(sum(F12(:)+y12(:))))
+F16 = F2(6188:9012,:);
+y16 = y(6188:9012,:);
+r16=corr2(F16,y16)
+R16=r16^2
+m16=sqrt(sum((y16(:)-F16(:)).^2)/numel(F16))
+b16=max(F16);
+a16=min(F16);
+n16=m16/(b16-a16)
+fb16=(sum(F16(:)-y16(:)))/(2*numel(F16)*(sum(F16(:)+y16(:))))
+% Table1= Correlation Coefficient, RMSE, NMSE and Fractional bias
+%R12= correlation coefficient in traning section
+%R16= correlation coefficient in forecasting section
+%m12= RMSE in training section
+%m16= RMSE in forecasting section
+%n12= NMSE in training section
+%n16= NMSE in forecasting section
+%fb12= fractional bias in training section
+%fb16= fractional bias in forecasting section
+table1=[R12,m12,n12,fb12,R16,m16,n16,fb16]
+%table2= time, observation values, predicted values
+table2=[[t],[y],[F2]];
